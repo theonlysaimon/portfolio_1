@@ -1,0 +1,4 @@
+﻿  Laba7ISIS.cpp
+D:\Desktop\Study\ИСИС\Лабы\Laba7ISIS\Laba7ISIS.cpp(186,9): warning C4101: ch_1: неиспользованная локальная переменная
+D:\Desktop\Study\ИСИС\Лабы\Laba7ISIS\Laba7ISIS.cpp(184,29): warning C4101: temp: неиспользованная локальная переменная
+  Laba7ISIS.vcxproj -> D:\Desktop\Study\ИСИС\Лабы\Laba7ISIS\Debug\Laba7ISIS.exe

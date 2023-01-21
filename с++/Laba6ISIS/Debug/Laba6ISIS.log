@@ -1,0 +1,6 @@
+﻿  Laba6ISIS.cpp
+D:\Desktop\Study\ИСИС\Лабы\Laba6ISIS\Laba6ISIS.cpp(63,23): warning C4244: =: преобразование "float" в "int", возможна потеря данных
+D:\Desktop\Study\ИСИС\Лабы\Laba6ISIS\Laba6ISIS.cpp(69,31): warning C4244: =: преобразование "float" в "int", возможна потеря данных
+D:\Desktop\Study\ИСИС\Лабы\Laba6ISIS\Laba6ISIS.cpp(76,23): warning C4244: =: преобразование "int" в "float", возможна потеря данных
+D:\Desktop\Study\ИСИС\Лабы\Laba6ISIS\Laba6ISIS.cpp(163,35): warning C4244: аргумент: преобразование "int" в "float", возможна потеря данных
+  Laba6ISIS.vcxproj -> D:\Desktop\Study\ИСИС\Лабы\Laba6ISIS\Debug\Laba6ISIS.exe
