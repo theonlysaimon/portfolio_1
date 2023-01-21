@@ -1,0 +1,112 @@
+#:kivy 1.0
+
+<ItemLabel@Label>:
+    font_size: '30sp'
+    halign: 'left'
+    valign: 'middle'
+    text_size: self.size
+    
+
+<ItemAnchorLayout@AnchorLayout>:
+    padding:[0, 27, 0, 27]
+    size_hint: (1.0, 0.5)
+
+<ItemText@TextInput>:
+    font_size: '30sp'
+    size_hint: (1, 0.5)
+    mutiline: False
+    input_type: 'number'
+    input_filter: 'int'
+    background_color: (.35, .35, .35, 1) if self.focus else (.22, .22, .22, 1)
+    foreground_color: (1,1,1,1)
+    cursor_color: (1,1,1,1)
+
+<Container>:
+    rows: 3
+
+    input_length: input_length
+    input_width: input_width
+    input_height: input_height
+    input_count: input_count
+
+    price : price 
+    circulation: circulation
+
+    GridLayout:
+        cols: 2
+        size_hint: 1, 0.75
+
+        BoxLayout:
+            orientation: 'vertical'
+            padding:[30, 0, 0, 0]
+            size_hint_x: .75
+            
+            ItemLabel:
+                text: 'Длина'
+            ItemLabel:
+                text: 'Ширина'
+            ItemLabel:
+                text: 'Высота'
+            ItemLabel:
+                text: 'Тираж'
+
+        BoxLayout:
+            orientation: 'vertical'
+            padding:[20, 0, 30, 0]
+
+            ItemAnchorLayout:
+                ItemText:
+                    id: input_length
+
+            ItemAnchorLayout:
+                ItemText:
+                    id: input_width
+            
+            ItemAnchorLayout:
+                ItemText:
+                    id: input_height
+            
+            ItemAnchorLayout:
+                ItemText:
+                    id: input_count
+                    text: '0'
+        
+  
+    GridLayout:
+        cols: 2
+        size_hint: 1, 0.40
+
+        BoxLayout:
+            orientation: 'vertical'
+            
+            padding:[30, 0, 0, 0]
+            size_hint: 0.8, 1
+            
+            ItemLabel:
+                text: 'Цена:'
+            ItemLabel:
+                text: 'За тираж:'
+            
+        BoxLayout:
+            orientation: 'vertical'
+            size_hint: 0.5, 1
+            padding:[5, 0, 0, 0]
+            ItemLabel:
+                id: price 
+                text: '0'
+            ItemLabel:
+                id: circulation
+                text: '0'
+                
+
+    BoxLayout:
+        size_hint: 0.9, 0.15
+        padding: [30, 0, 30, 20]
+        Button:
+            text: 'Посчитать'
+            font_size: '30sp'
+            background_color: (.0, .80, .89, 1)
+
+            on_release:
+                root.calculate()
+    
