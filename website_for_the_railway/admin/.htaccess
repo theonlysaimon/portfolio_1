@@ -1,0 +1,14 @@
+# Заголовок Cache-Control
+<IfModule mod_headers.c>
+        Header append Cache-Control "no-store, no-cache, must-revalidate"
+</IfModule>
+ 
+# Заголовок Expires
+<IfModule mod_expires.c>
+        ExpiresActive On ExpiresDefault "now"
+</IfModule>
+
+AuthType Basic
+AuthName "Только администратор может посетить данну страницу!"
+AuthUserFile W:/domains/localhost/admin/.htpasswd
+Require valid-user
