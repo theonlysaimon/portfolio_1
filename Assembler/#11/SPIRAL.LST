@@ -1,0 +1,682 @@
+Turbo Assembler	 Version 2.51	     03/20/22 20:21:15	    Page 1
+spiral.ASM
+SPIRAL02
+
+
+      1					 ;Программа построения спирали Архимеда
+      2
+      3					 include pixels.inc ;подключить макросы вывода точки, осей  +
+      4					 и символа
+1     5					 ;Макрос вывода символа в графическом режиме
+1     6					 ;(char	- ASCII	код символа)
+1     7					 OutCharG macro	x, y, color, char
+1     8						 pusha
+1     9						 mov ah,02h
+1    10						 mov bh,0h
+1    11						 mov dh,y
+1    12						 mov dl,x
+1    13						 int 10h
+1    14						 mov ah,09h
+1    15						 mov al,char
+1    16						 mov bh,0h
+1    17						 mov bl,color
+1    18						 mov cx,01h
+1    19						 int 10h
+1    20						 popa
+1    21					 endm
+1    22					 ;----------------------------------------------------------------------------------
+1    23					 ;Макрос вывода пиксела на	экран с коорд. x,y и	    +
+     24					 цветом color
+1    25					 PutPixel macro	x,y,color
+1    26						 pusha
+1    27						 mov ah,0ch
+1    28						 mov al,color
+1    29						 mov bh,0h
+1    30						 mov cx,x
+1    31						 mov dx,y
+1    32						 int 10h
+1    33						 popa
+1    34					 endm
+1    35					 ;-----------------------------------------------------------------------------------
+1    36					 ;Макрос вывода горизонтальной линии в середине	    +
+     37					 экрана
+1    38					 AxleX macro
+1    39						 local iter
+1    40						 pusha
+1    41						 OutCharG 4eh,0fh,03h,78h ;X
+1    42						 mov cx,320
+1    43					 iter:
+1    44						 PutPixel cx,120,4h
+1    45						 loop iter
+1    46						 PutPixel 317,121,4h ;стрелка
+1    47						 PutPixel 317,119,4h
+1    48						 PutPixel 316,121,4h
+1    49						 PutPixel 316,119,4h
+1    50						 PutPixel 315,121,4h
+1    51						 PutPixel 315,119,4h
+1    52						 PutPixel 314,121,4h
+1    53						 PutPixel 314,119,4h
+1    54						 PutPixel 313,121,4h
+1    55						 PutPixel 313,119,4h
+1    56						 PutPixel 312,122,4h
+1    57						 PutPixel 312,118,4h
+Turbo Assembler	 Version 2.51	     03/20/22 20:21:15	    Page 2
+spiral.ASM
+SPIRAL02
+
+
+1    58						 PutPixel 313,122,4h
+1    59						 PutPixel 313,118,4h
+1    60						 PutPixel 312,121,4h
+1    61						 PutPixel 312,119,4h
+1    62						 PutPixel 314,122,4h
+1    63						 PutPixel 314,118,4h
+1    64						 popa
+1    65					 endm
+1    66					 ;---------------------------------------------------------
+1    67					 ;Макрос вывода вертикальной линии	в середине	    +
+     68					 экрана
+1    69					 AxleY macro
+1    70						 local iters
+1    71						 pusha
+1    72						 mov cx,200
+1    73					 iters:
+1    74						 mov dx,cx
+1    75						 PutPixel 160,dx,4h
+1    76						 dec cx
+1    77						 cmp cx,19
+1    78						 jge iters
+1    79						 PutPixel 159,22,4h ;Стрелка.
+1    80						 PutPixel 161,22,4h
+1    81						 PutPixel 159,23,4h
+1    82						 PutPixel 161,23,4h
+1    83						 PutPixel 159,24,4h
+1    84						 PutPixel 161,24,4h
+1    85						 PutPixel 158,25,4h
+1    86						 PutPixel 162,25,4h
+1    87						 PutPixel 158,26,4h
+1    88						 PutPixel 162,26,4h
+1    89						 PutPixel 158,27,4h
+1    90						 PutPixel 162,27,4h
+1    91						 PutPixel 159,26,4h
+1    92						 PutPixel 161,26,4h
+1    93						 PutPixel 159,27,4h
+1    94						 PutPixel 161,27,4h
+1    95						 PutPixel 159,25,4h
+1    96						 PutPixel 161,25,4h
+1    97						 OutCharG 14h,01h,03h,79h ;Y
+1    98						 popa
+1    99					 endm
+    100
+    101	    0000			 .model	small
+    102
+    103	    0000			 .stack	100h
+    104
+    105	    0000			 .data
+    106	    0000  00000000			 fi dd 0.0		 ;Начальное значение переменной  +
+    107					 угла.
+    108	    0004  BA83126F			 delta dd -0.001	 ;Шаг изменения угла.
+    109	    0008  00A0				 xdiv2 dw 160	 ;Координаты центра экрана по X.
+    110	    000A  0078				 ydiv2 dw 120	 ;Координаты центра экрана по Y.
+    111	    000C  40800000			 K dd 4.0		 ;Коэффициент шага спирали.
+    112	    0010  0000				 xr dw 0		 ;Координата выводимой точки по X.
+    113	    0012  0000				 yr dw 0		 ;Координата выводимой точки по Y.
+    114	    0014  00				 forcolor DB 00h ;Цвет спирали (салатовый).
+Turbo Assembler	 Version 2.51	     03/20/22 20:21:15	    Page 3
+spiral.ASM
+SPIRAL02
+
+
+    115	    0015  53 70	69 72 61 6C 5F+		 Variant db 'Spiral_02_3_vitka', '$' ;Поясняющая надпись.
+    116		  30 32	5F 33 5F 76 69+
+    117		  74 6B	61 24
+    118
+    119	    0027			 .code
+    120					 .486 ;Используем расширенную систему команд
+    121					 ;---------------Вывод пиксела---------------------------------------------
+    122					 ;CX-координата X (столбец), DX-координата Y	(строка),
+    123					 ;AL-цвет пиксела
+    124	    0000			 POINT PROC
+    125	    0000  60				 pusha	 ;помещение регистров	в стек
+    126	    0001  8B 0E	0010r			 mov CX,xr ;Вычисляем координату х
+    127	    0005  03 0E	0008r			 add CX, xdiv2 ;в регистре CX.
+    128	    0009  8B 16	000Ar			 mov DX, ydiv2 ;Вычисляем координату	y
+    129	    000D  2B 16	0012r			 sub DX, yr ;в	регистре DX.
+    130	    0011  A0 0014r			 mov AL, forcolor ;Задать	цвет спирали.
+    131	    0014  B7 00				 mov BH, 0	 ;страница 0
+    132	    0016  B4 0C				 mov AH,12 ;Вывести пиксел
+    133	    0018  CD 10				 int 10h ;средствами BIOS.
+    134	    001A  61				 popa	 ;команда обратная pusha
+    135	    001B  C3				 ret		 ;выход из процедуры
+    136	    001C			 POINT ENDP
+    137					 ;-----------Закрашивание экрана цветом	фона---------------------
+    138					 ;CX-координата X (столбец), DX-координата Y	(строка),
+    139					 ;AL-цвет пиксела
+    140	    001C			 FON PROC
+    141	    001C  60				 pusha		 ;помещение регистров	в стек
+    142	    001D  B9 0000			 mov CX, 0	 ;столбец
+    143	    0020  BA 0000			 mov DX, 0	 ;строка
+    144	    0023  B0 0E				 mov AL, 0Eh ;Цвет фона.
+    145	    0025  B7 00				 mov BH, 0	 ;Номер страницы.
+    146	    0027			 c_1:
+    147	    0027  B4 0C				 mov AH, 12	 ;Вывести пиксел
+    148	    0029  CD 10				 int 10h	 ;средствами BIOS.
+    149	    002B  41				 inc CX		 ;cx + 1
+    150	    002C  81 F9	013F			 cmp CX, 319	 ;ставнение cx	с 319
+    151	    0030  75 F5				 jne c_1	 ;cx !=	319
+    152	    0032  33 C9				 xor CX, CX	 ;очистка cx
+    153	    0034  42				 inc DX		 ;dx + 1
+    154	    0035  81 FA	00C7			 cmp DX, 199 ; ставнение dx с	199
+    155	    0039  75 EC				 jne c_1	 ;dx !=	199
+    156	    003B  61				 popa		 ;команда обратная pusha
+    157	    003C  C3				 ret			 ;выход из процедуры
+    158	    003D			 FON ENDP
+    159					 ;===========Основная программа====================
+    160	    003D			 start:
+    161	    003D  B8 0000s			 mov ax,@DATA	 ;инициализация
+    162	    0040  8E D8				 mov ds,ax		 ;сегмента данных
+    163	    0042  33 C0				 xor ax,ax		 ;очистка ax
+    164	    0044  B9 4998			 mov CX, 18840 ;Количество итераций цикла
+    165					 ;(определяет	число витков).
+    166					 ;----------------------------------------------------------------------------------
+    167	    0047  B4 00				 mov ah,0h	 ;Инициализация графического
+    168	    0049  B0 13				 mov al,13h	 ;режима 320x200.
+    169	    004B  CD 10				 int 10h	 ;с помощью BIOS
+    170	    004D  E8 FFCC			 call FON	 ;Вызов процедуры	закрашивания фона.
+    171					 ;-------Вывод строки Variant-------------------------------------------------
+Turbo Assembler	 Version 2.51	     03/20/22 20:21:15	    Page 4
+spiral.ASM
+SPIRAL02
+
+
+    172	    0050  60				 pusha		 ;помещение регистров	в стек
+    173	    0051  B9 0011			 mov cx,17	 ;строка 17
+    174	    0054  BB 0000			 mov bx,0	 ;столбец 0
+    175	    0057			 l3:
+    176	    0057  8A 87	0015r			 mov al,Variant[bx]	 ;al = адрес переменной Variant
+    177	    005B  43				 inc bx				 ;bx + 1
+    178						 OutCharG bl, 02h, 03h,	al ;Вызов макроса.
+1   179	    005C  60				 pusha
+1   180	    005D  B4 02				 mov ah,02h
+1   181	    005F  B7 00				 mov bh,0h
+1   182	    0061  B6 02				 mov dh,02h
+1   183	    0063  8A D3				 mov dl,bl
+1   184	    0065  CD 10				 int 10h
+1   185	    0067  B4 09				 mov ah,09h
+1   186	    0069  8A C0				 mov al,al
+1   187	    006B  B7 00				 mov bh,0h
+1   188	    006D  B3 03				 mov bl,03h
+1   189	    006F  B9 0001			 mov cx,01h
+1   190	    0072  CD 10				 int 10h
+1   191	    0074  61				 popa
+    192	    0075  E2 E0				 loop l3			 ;цикл
+    193	    0077  61				 popa		 ;команда обратная pusha
+    194					 ;---------рисуем	оси-----------------------------------------------------------
+    195						 AxleX ;Вызов макроса.
+1   196	    0078  60				 pusha
+1   197						 OutCharG 4eh,0fh,03h,78h ;X
+2   198	    0079  60				 pusha
+2   199	    007A  B4 02				 mov ah,02h
+2   200	    007C  B7 00				 mov bh,0h
+2   201	    007E  B6 0F				 mov dh,0fh
+2   202	    0080  B2 4E				 mov dl,4eh
+2   203	    0082  CD 10				 int 10h
+2   204	    0084  B4 09				 mov ah,09h
+2   205	    0086  B0 78				 mov al,78h
+2   206	    0088  B7 00				 mov bh,0h
+2   207	    008A  B3 03				 mov bl,03h
+2   208	    008C  B9 0001			 mov cx,01h
+2   209	    008F  CD 10				 int 10h
+2   210	    0091  61				 popa
+1   211	    0092  B9 0140			 mov cx,320
+1   212	    0095			 ??0000:
+1   213						 PutPixel cx,120,4h
+2   214	    0095  60				 pusha
+2   215	    0096  B4 0C				 mov ah,0ch
+2   216	    0098  B0 04				 mov al,4h
+2   217	    009A  B7 00				 mov bh,0h
+2   218	    009C  8B C9				 mov cx,cx
+2   219	    009E  BA 0078			 mov dx,120
+2   220	    00A1  CD 10				 int 10h
+2   221	    00A3  61				 popa
+1   222	    00A4  E2 EF				 loop ??0000
+1   223						 PutPixel 317,121,4h ;стрелка
+2   224	    00A6  60				 pusha
+2   225	    00A7  B4 0C				 mov ah,0ch
+2   226	    00A9  B0 04				 mov al,4h
+2   227	    00AB  B7 00				 mov bh,0h
+2   228	    00AD  B9 013D			 mov cx,317
+Turbo Assembler	 Version 2.51	     03/20/22 20:21:15	    Page 5
+spiral.ASM
+SPIRAL02
+
+
+2   229	    00B0  BA 0079			 mov dx,121
+2   230	    00B3  CD 10				 int 10h
+2   231	    00B5  61				 popa
+1   232						 PutPixel 317,119,4h
+2   233	    00B6  60				 pusha
+2   234	    00B7  B4 0C				 mov ah,0ch
+2   235	    00B9  B0 04				 mov al,4h
+2   236	    00BB  B7 00				 mov bh,0h
+2   237	    00BD  B9 013D			 mov cx,317
+2   238	    00C0  BA 0077			 mov dx,119
+2   239	    00C3  CD 10				 int 10h
+2   240	    00C5  61				 popa
+1   241						 PutPixel 316,121,4h
+2   242	    00C6  60				 pusha
+2   243	    00C7  B4 0C				 mov ah,0ch
+2   244	    00C9  B0 04				 mov al,4h
+2   245	    00CB  B7 00				 mov bh,0h
+2   246	    00CD  B9 013C			 mov cx,316
+2   247	    00D0  BA 0079			 mov dx,121
+2   248	    00D3  CD 10				 int 10h
+2   249	    00D5  61				 popa
+1   250						 PutPixel 316,119,4h
+2   251	    00D6  60				 pusha
+2   252	    00D7  B4 0C				 mov ah,0ch
+2   253	    00D9  B0 04				 mov al,4h
+2   254	    00DB  B7 00				 mov bh,0h
+2   255	    00DD  B9 013C			 mov cx,316
+2   256	    00E0  BA 0077			 mov dx,119
+2   257	    00E3  CD 10				 int 10h
+2   258	    00E5  61				 popa
+1   259						 PutPixel 315,121,4h
+2   260	    00E6  60				 pusha
+2   261	    00E7  B4 0C				 mov ah,0ch
+2   262	    00E9  B0 04				 mov al,4h
+2   263	    00EB  B7 00				 mov bh,0h
+2   264	    00ED  B9 013B			 mov cx,315
+2   265	    00F0  BA 0079			 mov dx,121
+2   266	    00F3  CD 10				 int 10h
+2   267	    00F5  61				 popa
+1   268						 PutPixel 315,119,4h
+2   269	    00F6  60				 pusha
+2   270	    00F7  B4 0C				 mov ah,0ch
+2   271	    00F9  B0 04				 mov al,4h
+2   272	    00FB  B7 00				 mov bh,0h
+2   273	    00FD  B9 013B			 mov cx,315
+2   274	    0100  BA 0077			 mov dx,119
+2   275	    0103  CD 10				 int 10h
+2   276	    0105  61				 popa
+1   277						 PutPixel 314,121,4h
+2   278	    0106  60				 pusha
+2   279	    0107  B4 0C				 mov ah,0ch
+2   280	    0109  B0 04				 mov al,4h
+2   281	    010B  B7 00				 mov bh,0h
+2   282	    010D  B9 013A			 mov cx,314
+2   283	    0110  BA 0079			 mov dx,121
+2   284	    0113  CD 10				 int 10h
+2   285	    0115  61				 popa
+Turbo Assembler	 Version 2.51	     03/20/22 20:21:15	    Page 6
+spiral.ASM
+SPIRAL02
+
+
+1   286						 PutPixel 314,119,4h
+2   287	    0116  60				 pusha
+2   288	    0117  B4 0C				 mov ah,0ch
+2   289	    0119  B0 04				 mov al,4h
+2   290	    011B  B7 00				 mov bh,0h
+2   291	    011D  B9 013A			 mov cx,314
+2   292	    0120  BA 0077			 mov dx,119
+2   293	    0123  CD 10				 int 10h
+2   294	    0125  61				 popa
+1   295						 PutPixel 313,121,4h
+2   296	    0126  60				 pusha
+2   297	    0127  B4 0C				 mov ah,0ch
+2   298	    0129  B0 04				 mov al,4h
+2   299	    012B  B7 00				 mov bh,0h
+2   300	    012D  B9 0139			 mov cx,313
+2   301	    0130  BA 0079			 mov dx,121
+2   302	    0133  CD 10				 int 10h
+2   303	    0135  61				 popa
+1   304						 PutPixel 313,119,4h
+2   305	    0136  60				 pusha
+2   306	    0137  B4 0C				 mov ah,0ch
+2   307	    0139  B0 04				 mov al,4h
+2   308	    013B  B7 00				 mov bh,0h
+2   309	    013D  B9 0139			 mov cx,313
+2   310	    0140  BA 0077			 mov dx,119
+2   311	    0143  CD 10				 int 10h
+2   312	    0145  61				 popa
+1   313						 PutPixel 312,122,4h
+2   314	    0146  60				 pusha
+2   315	    0147  B4 0C				 mov ah,0ch
+2   316	    0149  B0 04				 mov al,4h
+2   317	    014B  B7 00				 mov bh,0h
+2   318	    014D  B9 0138			 mov cx,312
+2   319	    0150  BA 007A			 mov dx,122
+2   320	    0153  CD 10				 int 10h
+2   321	    0155  61				 popa
+1   322						 PutPixel 312,118,4h
+2   323	    0156  60				 pusha
+2   324	    0157  B4 0C				 mov ah,0ch
+2   325	    0159  B0 04				 mov al,4h
+2   326	    015B  B7 00				 mov bh,0h
+2   327	    015D  B9 0138			 mov cx,312
+2   328	    0160  BA 0076			 mov dx,118
+2   329	    0163  CD 10				 int 10h
+2   330	    0165  61				 popa
+1   331						 PutPixel 313,122,4h
+2   332	    0166  60				 pusha
+2   333	    0167  B4 0C				 mov ah,0ch
+2   334	    0169  B0 04				 mov al,4h
+2   335	    016B  B7 00				 mov bh,0h
+2   336	    016D  B9 0139			 mov cx,313
+2   337	    0170  BA 007A			 mov dx,122
+2   338	    0173  CD 10				 int 10h
+2   339	    0175  61				 popa
+1   340						 PutPixel 313,118,4h
+2   341	    0176  60				 pusha
+2   342	    0177  B4 0C				 mov ah,0ch
+Turbo Assembler	 Version 2.51	     03/20/22 20:21:15	    Page 7
+spiral.ASM
+SPIRAL02
+
+
+2   343	    0179  B0 04				 mov al,4h
+2   344	    017B  B7 00				 mov bh,0h
+2   345	    017D  B9 0139			 mov cx,313
+2   346	    0180  BA 0076			 mov dx,118
+2   347	    0183  CD 10				 int 10h
+2   348	    0185  61				 popa
+1   349						 PutPixel 312,121,4h
+2   350	    0186  60				 pusha
+2   351	    0187  B4 0C				 mov ah,0ch
+2   352	    0189  B0 04				 mov al,4h
+2   353	    018B  B7 00				 mov bh,0h
+2   354	    018D  B9 0138			 mov cx,312
+2   355	    0190  BA 0079			 mov dx,121
+2   356	    0193  CD 10				 int 10h
+2   357	    0195  61				 popa
+1   358						 PutPixel 312,119,4h
+2   359	    0196  60				 pusha
+2   360	    0197  B4 0C				 mov ah,0ch
+2   361	    0199  B0 04				 mov al,4h
+2   362	    019B  B7 00				 mov bh,0h
+2   363	    019D  B9 0138			 mov cx,312
+2   364	    01A0  BA 0077			 mov dx,119
+2   365	    01A3  CD 10				 int 10h
+2   366	    01A5  61				 popa
+1   367						 PutPixel 314,122,4h
+2   368	    01A6  60				 pusha
+2   369	    01A7  B4 0C				 mov ah,0ch
+2   370	    01A9  B0 04				 mov al,4h
+2   371	    01AB  B7 00				 mov bh,0h
+2   372	    01AD  B9 013A			 mov cx,314
+2   373	    01B0  BA 007A			 mov dx,122
+2   374	    01B3  CD 10				 int 10h
+2   375	    01B5  61				 popa
+1   376						 PutPixel 314,118,4h
+2   377	    01B6  60				 pusha
+2   378	    01B7  B4 0C				 mov ah,0ch
+2   379	    01B9  B0 04				 mov al,4h
+2   380	    01BB  B7 00				 mov bh,0h
+2   381	    01BD  B9 013A			 mov cx,314
+2   382	    01C0  BA 0076			 mov dx,118
+2   383	    01C3  CD 10				 int 10h
+2   384	    01C5  61				 popa
+1   385	    01C6  61				 popa
+    386						 AxleY ;Вызов макроса.
+1   387	    01C7  60				 pusha
+1   388	    01C8  B9 00C8			 mov cx,200
+1   389	    01CB			 ??0001:
+1   390	    01CB  8B D1				 mov dx,cx
+1   391						 PutPixel 160,dx,4h
+2   392	    01CD  60				 pusha
+2   393	    01CE  B4 0C				 mov ah,0ch
+2   394	    01D0  B0 04				 mov al,4h
+2   395	    01D2  B7 00				 mov bh,0h
+2   396	    01D4  B9 00A0			 mov cx,160
+2   397	    01D7  8B D2				 mov dx,dx
+2   398	    01D9  CD 10				 int 10h
+2   399	    01DB  61				 popa
+Turbo Assembler	 Version 2.51	     03/20/22 20:21:15	    Page 8
+spiral.ASM
+SPIRAL02
+
+
+1   400	    01DC  49				 dec cx
+1   401	    01DD  83 F9	13			 cmp cx,19
+1   402	    01E0  7D E9				 jge ??0001
+1   403						 PutPixel 159,22,4h ;Стрелка.
+2   404	    01E2  60				 pusha
+2   405	    01E3  B4 0C				 mov ah,0ch
+2   406	    01E5  B0 04				 mov al,4h
+2   407	    01E7  B7 00				 mov bh,0h
+2   408	    01E9  B9 009F			 mov cx,159
+2   409	    01EC  BA 0016			 mov dx,22
+2   410	    01EF  CD 10				 int 10h
+2   411	    01F1  61				 popa
+1   412						 PutPixel 161,22,4h
+2   413	    01F2  60				 pusha
+2   414	    01F3  B4 0C				 mov ah,0ch
+2   415	    01F5  B0 04				 mov al,4h
+2   416	    01F7  B7 00				 mov bh,0h
+2   417	    01F9  B9 00A1			 mov cx,161
+2   418	    01FC  BA 0016			 mov dx,22
+2   419	    01FF  CD 10				 int 10h
+2   420	    0201  61				 popa
+1   421						 PutPixel 159,23,4h
+2   422	    0202  60				 pusha
+2   423	    0203  B4 0C				 mov ah,0ch
+2   424	    0205  B0 04				 mov al,4h
+2   425	    0207  B7 00				 mov bh,0h
+2   426	    0209  B9 009F			 mov cx,159
+2   427	    020C  BA 0017			 mov dx,23
+2   428	    020F  CD 10				 int 10h
+2   429	    0211  61				 popa
+1   430						 PutPixel 161,23,4h
+2   431	    0212  60				 pusha
+2   432	    0213  B4 0C				 mov ah,0ch
+2   433	    0215  B0 04				 mov al,4h
+2   434	    0217  B7 00				 mov bh,0h
+2   435	    0219  B9 00A1			 mov cx,161
+2   436	    021C  BA 0017			 mov dx,23
+2   437	    021F  CD 10				 int 10h
+2   438	    0221  61				 popa
+1   439						 PutPixel 159,24,4h
+2   440	    0222  60				 pusha
+2   441	    0223  B4 0C				 mov ah,0ch
+2   442	    0225  B0 04				 mov al,4h
+2   443	    0227  B7 00				 mov bh,0h
+2   444	    0229  B9 009F			 mov cx,159
+2   445	    022C  BA 0018			 mov dx,24
+2   446	    022F  CD 10				 int 10h
+2   447	    0231  61				 popa
+1   448						 PutPixel 161,24,4h
+2   449	    0232  60				 pusha
+2   450	    0233  B4 0C				 mov ah,0ch
+2   451	    0235  B0 04				 mov al,4h
+2   452	    0237  B7 00				 mov bh,0h
+2   453	    0239  B9 00A1			 mov cx,161
+2   454	    023C  BA 0018			 mov dx,24
+2   455	    023F  CD 10				 int 10h
+2   456	    0241  61				 popa
+Turbo Assembler	 Version 2.51	     03/20/22 20:21:15	    Page 9
+spiral.ASM
+SPIRAL02
+
+
+1   457						 PutPixel 158,25,4h
+2   458	    0242  60				 pusha
+2   459	    0243  B4 0C				 mov ah,0ch
+2   460	    0245  B0 04				 mov al,4h
+2   461	    0247  B7 00				 mov bh,0h
+2   462	    0249  B9 009E			 mov cx,158
+2   463	    024C  BA 0019			 mov dx,25
+2   464	    024F  CD 10				 int 10h
+2   465	    0251  61				 popa
+1   466						 PutPixel 162,25,4h
+2   467	    0252  60				 pusha
+2   468	    0253  B4 0C				 mov ah,0ch
+2   469	    0255  B0 04				 mov al,4h
+2   470	    0257  B7 00				 mov bh,0h
+2   471	    0259  B9 00A2			 mov cx,162
+2   472	    025C  BA 0019			 mov dx,25
+2   473	    025F  CD 10				 int 10h
+2   474	    0261  61				 popa
+1   475						 PutPixel 158,26,4h
+2   476	    0262  60				 pusha
+2   477	    0263  B4 0C				 mov ah,0ch
+2   478	    0265  B0 04				 mov al,4h
+2   479	    0267  B7 00				 mov bh,0h
+2   480	    0269  B9 009E			 mov cx,158
+2   481	    026C  BA 001A			 mov dx,26
+2   482	    026F  CD 10				 int 10h
+2   483	    0271  61				 popa
+1   484						 PutPixel 162,26,4h
+2   485	    0272  60				 pusha
+2   486	    0273  B4 0C				 mov ah,0ch
+2   487	    0275  B0 04				 mov al,4h
+2   488	    0277  B7 00				 mov bh,0h
+2   489	    0279  B9 00A2			 mov cx,162
+2   490	    027C  BA 001A			 mov dx,26
+2   491	    027F  CD 10				 int 10h
+2   492	    0281  61				 popa
+1   493						 PutPixel 158,27,4h
+2   494	    0282  60				 pusha
+2   495	    0283  B4 0C				 mov ah,0ch
+2   496	    0285  B0 04				 mov al,4h
+2   497	    0287  B7 00				 mov bh,0h
+2   498	    0289  B9 009E			 mov cx,158
+2   499	    028C  BA 001B			 mov dx,27
+2   500	    028F  CD 10				 int 10h
+2   501	    0291  61				 popa
+1   502						 PutPixel 162,27,4h
+2   503	    0292  60				 pusha
+2   504	    0293  B4 0C				 mov ah,0ch
+2   505	    0295  B0 04				 mov al,4h
+2   506	    0297  B7 00				 mov bh,0h
+2   507	    0299  B9 00A2			 mov cx,162
+2   508	    029C  BA 001B			 mov dx,27
+2   509	    029F  CD 10				 int 10h
+2   510	    02A1  61				 popa
+1   511						 PutPixel 159,26,4h
+2   512	    02A2  60				 pusha
+2   513	    02A3  B4 0C				 mov ah,0ch
+Turbo Assembler	 Version 2.51	     03/20/22 20:21:15	    Page 10
+spiral.ASM
+SPIRAL02
+
+
+2   514	    02A5  B0 04				 mov al,4h
+2   515	    02A7  B7 00				 mov bh,0h
+2   516	    02A9  B9 009F			 mov cx,159
+2   517	    02AC  BA 001A			 mov dx,26
+2   518	    02AF  CD 10				 int 10h
+2   519	    02B1  61				 popa
+1   520						 PutPixel 161,26,4h
+2   521	    02B2  60				 pusha
+2   522	    02B3  B4 0C				 mov ah,0ch
+2   523	    02B5  B0 04				 mov al,4h
+2   524	    02B7  B7 00				 mov bh,0h
+2   525	    02B9  B9 00A1			 mov cx,161
+2   526	    02BC  BA 001A			 mov dx,26
+2   527	    02BF  CD 10				 int 10h
+2   528	    02C1  61				 popa
+1   529						 PutPixel 159,27,4h
+2   530	    02C2  60				 pusha
+2   531	    02C3  B4 0C				 mov ah,0ch
+2   532	    02C5  B0 04				 mov al,4h
+2   533	    02C7  B7 00				 mov bh,0h
+2   534	    02C9  B9 009F			 mov cx,159
+2   535	    02CC  BA 001B			 mov dx,27
+2   536	    02CF  CD 10				 int 10h
+2   537	    02D1  61				 popa
+1   538						 PutPixel 161,27,4h
+2   539	    02D2  60				 pusha
+2   540	    02D3  B4 0C				 mov ah,0ch
+2   541	    02D5  B0 04				 mov al,4h
+2   542	    02D7  B7 00				 mov bh,0h
+2   543	    02D9  B9 00A1			 mov cx,161
+2   544	    02DC  BA 001B			 mov dx,27
+2   545	    02DF  CD 10				 int 10h
+2   546	    02E1  61				 popa
+1   547						 PutPixel 159,25,4h
+2   548	    02E2  60				 pusha
+2   549	    02E3  B4 0C				 mov ah,0ch
+2   550	    02E5  B0 04				 mov al,4h
+2   551	    02E7  B7 00				 mov bh,0h
+2   552	    02E9  B9 009F			 mov cx,159
+2   553	    02EC  BA 0019			 mov dx,25
+2   554	    02EF  CD 10				 int 10h
+2   555	    02F1  61				 popa
+1   556						 PutPixel 161,25,4h
+2   557	    02F2  60				 pusha
+2   558	    02F3  B4 0C				 mov ah,0ch
+2   559	    02F5  B0 04				 mov al,4h
+2   560	    02F7  B7 00				 mov bh,0h
+2   561	    02F9  B9 00A1			 mov cx,161
+2   562	    02FC  BA 0019			 mov dx,25
+2   563	    02FF  CD 10				 int 10h
+2   564	    0301  61				 popa
+1   565						 OutCharG 14h,01h,03h,79h ;Y
+2   566	    0302  60				 pusha
+2   567	    0303  B4 02				 mov ah,02h
+2   568	    0305  B7 00				 mov bh,0h
+2   569	    0307  B6 01				 mov dh,01h
+2   570	    0309  B2 14				 mov dl,14h
+Turbo Assembler	 Version 2.51	     03/20/22 20:21:15	    Page 11
+spiral.ASM
+SPIRAL02
+
+
+2   571	    030B  CD 10				 int 10h
+2   572	    030D  B4 09				 mov ah,09h
+2   573	    030F  B0 79				 mov al,79h
+2   574	    0311  B7 00				 mov bh,0h
+2   575	    0313  B3 03				 mov bl,03h
+2   576	    0315  B9 0001			 mov cx,01h
+2   577	    0318  CD 10				 int 10h
+2   578	    031A  61				 popa
+1   579	    031B  61				 popa
+    580					 ;------Вычисляем формулу x=round(fi*K*cos(fi))----------------------
+    581	    031C  9B DB	E3			 finit				 ;Инициализация			    +
+    582					 сопроцессора.
+    583	    031F			 l1:
+    584	    031F  D9 06	0000r			 fld fi				 ;Загрузить угол fi в стек FPU.
+    585	    0323  D9 FF				 fcos				 ;Вычислить cos(fi).
+    586	    0325  D9 06	0000r			 fld fi				 ;Загрузить угол fi в стек FPU.
+    587	    0329  D8 0E	000Cr			 fmul K				 ;ST(0):=K*(ST(0))
+    588	    032D  DE C9				 fmul				 ;ST()):=(ST(0))*(ST(1))
+    589	    032F  D9 FC				 frndint			 ;ST(0):=round(ST(0))
+    590	    0331  DF 1E	0010r			 fistp word ptr	xr	 ;Заносим X в переменную для	    +
+    591					 вывода
+    592											 ;на экран
+    593					 ;------Вычисляем формулу y=round(fi*K*sin(fi))-----------------------
+    594	    0335  D9 06	0000r			 fld fi		 ;Загрузить угол fi в стек FPU.
+    595	    0339  D9 FE				 fsin		 ;Вычислить sin(fi).
+    596	    033B  D9 06	0000r			 fld fi		 ;Загрузить угол fi в стек FPU.
+    597	    033F  D8 0E	000Cr			 fmul K		 ;ST(0):=K*(ST(0))
+    598	    0343  DE C9				 fmul		 ;ST()):=(ST(0))*(ST(1))
+    599	    0345  D9 FC				 frndint	 ;ST(0):=round(ST(0))
+    600	    0347  DF 1E	0012r			 fistp word ptr	yr	 ;Заносим Y в переменную для	    +
+    601					 вывода
+    602											 ;на экран.
+    603	    034B  E8 FCB2			 call POINT	 ;перейти к процедуре POINT
+    604					 ;---------Вычисляем новое значение угла			    +
+    605					 fi-----------------------------
+    606	    034E  D9 06	0004r			 fld delta	 ;Загрузить угол delta в стек	FPU.
+    607	    0352  D9 06	0000r			 fld fi		 ;Загрузить угол fi в стек FPU.
+    608	    0356  DE C1				 fadd		 ;Добавляем два операнда с	плавающей  +
+    609					 запятой	и помещает результат в регистр с		    +
+    610					 плавающей запятой.
+    611	    0358  D9 1E	0000r			 fstp fi	 ;Сохранить значение с плавающей	    +
+    612					 запятой
+    613	    035C  E2 C1				 loop l1	 ;Повторить цикл пока (СХ) не равно 0.
+    614
+    615					 ;-----------------------------------------------------------------------------------
+    616	    035E  B4 01				 mov ah,1h ;Ожидание нажатия клавиши.
+    617	    0360  CD 21				 int 21h
+    618					 ;-----------------------------------------------------------------------------------
+    619	    0362  B4 00				 mov ah,0h	 ;Перевод в Text Mode.
+    620	    0364  B0 03				 mov al,03h	 ;номер режима
+    621	    0366  CD 10				 int 10h	 ;с помощью BIOS
+    622					 ;-----------------------------------------------------------------------------------
+    623	    0368			 exit:
+    624	    0368  B8 4C00			 mov ax,4C00h ;Стандартный выход.
+    625	    036B  CD 21				 int 21h
+    626					 END start
+

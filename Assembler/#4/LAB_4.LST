@@ -1,0 +1,56 @@
+Turbo Assembler	 Version 2.51	     03/03/22 16:59:22	    Page 1
+lab_4.ASM
+
+
+
+      1				     ;Program_4	– Арифметические операции, вариант …
+      2	0000			     Data SEGMENT ;Открыть сегмент данных
+      3	0000  FB		     A DB -5 ;Инициализировать
+      4	0001  1F		     B DB 31 ;переменные A, B, C, D, X
+      5	0002  ??		     C DB ?
+      6	0003  ??		     F DB ?
+      7	0004  01		     D DB 1
+      8	0005  ????		     X DW ?
+      9	0007			     Data ENDS ;Закрыть сегмент данных
+     10	0000			     Ourstack SEGMENT Stack ;Открыть сегмент стека
+     11	0000  0100*(??)		     DB	100h DUP (?) ;Отвести под стек 256 байт
+     12	0100			     Ourstack ENDS ;Закрыть сегмент стека
+     13				     ASSUME CS:Code, DS:Data, SS:Ourstack ;Назначить сегментные ;регистры
+     14	0000			     Code SEGMENT ;Открыть сегмент кодов
+     15	0000			     Start:
+     16	0000  B8 0000s			 mov AX, Data ;Инициализировать
+     17	0003  8E D8			 mov DS, AX ;сегментный регистр DS
+     18	0005  33 C0			 xor AX, AX ;Очистить регистр AX
+     19	0007  33 DB			 xor BX, BX
+     20	0009  33 C9			 xor CX, CX
+     21
+     22	000B  A0 0001r			 mov AL, B
+     23	000E  00 06 0004r		 ADD D,	AL
+     24
+     25	0012  A0 0004r			 mov AL, D
+     26	0015  F6 26 0004r		 MUL D ; AX
+     27
+     28	0019  8B C8			 mov CX, AX
+     29	001B  33 C0			 xor AX, AX
+     30
+     31	001D  B0 19			 mov AL, 25
+     32	001F  28 06 0001r		 SUB B,	AL
+     33
+     34	0023  A0 0001r			 mov AL, B
+     35	0026  F6 26 0001r		 MUL B ;AX
+     36
+     37	002A  8A 1E 0000r		 mov BL, A
+     38	002E  80 C3 01			 ADD BL, 1
+     39
+     40					 ; работает с AX
+     41	0031  F6 FB			 IDIV BL ;AL
+     42
+     43	0033  F6 D8			 neg AL
+     44	0035  2B C8			 SUB CX, AX
+     45	0037  89 0E 0005r		 mov X,	CX
+     46
+     47	003B  B8 4C00			 mov AX, 4C00h ;Завершить программу
+     48	003E  CD 21			 int 21h ;с помощью DOS
+     49	0040			     Code ENDS ;Закрыть сегмент кодов
+     50					 END Start ;Конец исходного модуля.
+

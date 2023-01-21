@@ -1,0 +1,29 @@
+Turbo Assembler	 Version 2.51	     02/17/22 16:50:59	    Page 1
+laba_1.ASM
+
+
+
+      1				     ;Program Hello_1– Ваша первая программа
+      2	0000			     Data SEGMENT
+      3	0000  48 65 6C 6C 6F 2C	20+  Greet DB 'Hello, My friends!', 13,	10, '$'
+      4	      4D 79 20 66 72 69	65+
+      5	      6E 64 73 21 0D 0A	24
+      6	0015			     Data ENDS ;Закрыть сегмент данных
+      7	0000			     Ourstack SEGMENT Stack ;Открыть сегмент стека
+      8	0000  0100*(??)		     DB	100h DUP (?) ;Отвести под стек 256 байт
+      9	0100			     Ourstack ENDS ;Закрыть сегмент стека
+     10				     ASSUME CS:Code, DS:Data, SS:Ourstack ;Назначить сегментные ;регистры
+     11
+     12	0000			     Code SEGMENT ;Открыть сегмент кодов
+     13	0000			     Start:
+     14	0000  B8 0000s			 mov AX, Data ;Инициализировать
+     15	0003  8E D8			 mov DS, AX ;сегментный регистр DS
+     16	0005  B4 09			 mov AH, 09h ;Вывести строку Greet
+     17	0007  BA 0000r			 mov DX, OFFSET	Greet ;на экран с помощью
+     18	000A  CD 21			 int 21h ;DOS
+     19	000C  B0 00			 mov AL, 0 ;Завершить программу
+     20	000E  B4 4C			 mov AH, 4Ch ;с помощью
+     21	0010  CD 21			 int 21h ;DOS
+     22	0012			     Code ENDS ;Закрыть сегмент кодов
+     23					 END Start ;Конец исходного модуля
+

@@ -1,0 +1,49 @@
+Turbo Assembler	 Version 2.51	     02/22/22 00:39:40	    Page 1
+laba_3.ASM
+
+
+
+      1				     ;Program_3	– Команды передачи данных, вариант 16
+      2	0000			     Data SEGMENT ;Открыть сегмент данных
+      3	0000  ??			 A DB ?	;Зарезервировать	место
+      4	0001  ??			 B DB ?	;в памяти для
+      5	0002  ??			 C DB ?	;переменных
+      6	0003  ??			 D DB ?	;A, B, C, D
+      7	0004			     Data ENDS ;Закрыть сегмент данных
+      8
+      9	0000			     Ourstack SEGMENT Stack ;Открыть сегмент стека
+     10	0000  0100*(??)			 DB 100h DUP (?) ;Отвести под	стек 256 байт
+     11	0100			     Ourstack ENDS ;Закрыть сегмент стека
+     12				     ASSUME CS:Code, DS:Data, SS:Ourstack ;Назначить сегментные регистры
+     13	0000			     Code SEGMENT ;Открыть сегмент кодов
+     14	0000			     Start:
+     15	0000  B8 0000s			 mov AX, Data ;Инициализировать
+     16	0003  8E D8			 mov DS, AX ;сегментный регистр DS
+     17	0005  C6 06 0000r 0F		 mov A,	15 ;Инициализировать
+     18	000A  C6 06 0001r 1A		 mov B,	1Ah ;переменные A, B,	C, D
+     19	000F  C6 06 0002r 1F		 mov C,	1Fh ;значениями Вашего
+     20	0014  C6 06 0003r 06		 mov D,	6 ;варианта
+     21	0019  A0 0000r			 mov AL, A
+     22	001C  8A 26 0001r		 mov AH, B
+     23	0020  86 C4			 xchg AL, AH
+     24	0022  BB 3E10			 mov BX, 3E10h
+     25	0025  8B CB			 mov CX, BX
+     26	0027  53			 push BX
+     27	0028  51			 push CX
+     28	0029  50			 push AX
+     29	002A  BE 0002r			 lea SI, C
+     30	002D  8B C6			 mov AX, SI
+     31	002F  BF 0003r			 lea DI, D
+     32	0032  8B DF			 mov BX, DI
+     33	0034  58			 pop AX
+     34	0035  59			 pop CX
+     35	0036  5B			 pop BX
+     36	0037  8B D8			 mov BX, AX
+     37	0039  A2 0000r			 mov A,	AL
+     38	003C  88 26 0001r		 mov B,	AH
+     39	0040  C6 06 0002r 00		 mov C,	0
+     40	0045  B8 4C00			 mov AX, 4C00h ;Завершить программу
+     41	0048  CD 21			 int 21h ;с помощью DOS
+     42	004A			     Code ENDS ;Закрыть сегмент кодов
+     43					 END Start ;Конец исходного модуля.
+
